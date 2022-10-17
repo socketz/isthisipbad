@@ -12,14 +12,12 @@
 
 import os
 import sys
-import urllib
-import urllib2
+import urllib.request
 import argparse
 import re
 import socket
 # Requires dnspython AKA python-dns package
 import dns.resolver
-from urllib2 import urlopen
 
 
 def color(text, color_code):
@@ -56,17 +54,17 @@ def content_test(url, badip):
     """
 
     try:
-        request = urllib2.Request(url)
-        opened_request = urllib2.build_opener().open(request)
-	html_content = opened_request.read()
-	retcode = opened_request.code
+        request = Request(url)
+        opened_request = build_opener().open(request)
+        html_content = opened_request.read()
+        retcode = opened_request.code
 
-	matches = retcode == 200
+        matches = retcode == 200
         matches = matches and re.findall(badip, html_content)
 
         return len(matches) == 0
-    except Exception, e:
-        print "Error! %s" % e
+    except(Exception, e):
+        print("Error! %s" % e)
         return False
 
 bls = ["b.barracudacentral.org", "bl.spamcannibal.org", "bl.spamcop.net",
@@ -194,26 +192,25 @@ if __name__ == "__main__":
     if args is not None and args.ip is not None and len(args.ip) > 0:
         badip = args.ip
     else:
-        my_ip = urlopen('http://icanhazip.com').read().rstrip()
+        my_ip = urllib.request.urlopen('http://icanhazip.com').read().rstrip()
 
         print(blue('Check IP against popular IP and DNS blacklists'))
         print(blue('A quick and dirty script by @jgamblin\n'))
         print(red('Your public IP address is {0}\n'.format(my_ip)))
 
         # Get IP To Check
-        resp = raw_input('Would you like to check {0} ? (Y/N):'.format(my_ip))
+        resp = input('Would you like to check {0} ? (Y/N):'.format(my_ip))
 
         if resp.lower() in ["yes", "y"]:
             badip = my_ip
         else:
-            badip = raw_input(blue("\nWhat IP would you like to check?: "))
+            badip = input(blue("\nWhat IP would you like to check?: "))
             if badip is None or badip == "":
                 sys.exit("No IP address to check.")
 
     #IP INFO
     reversed_dns = socket.getfqdn(badip)
-    geoip = urllib.urlopen('http://api.hackertarget.com/geoip/?q='
-                           + badip).read().rstrip()
+    geoip = urllib.request.urlopen('http://api.hackertarget.com/geoip/?q=' + badip).read().rstrip()
 
     print(blue('\nThe FQDN for {0} is {1}\n'.format(badip, reversed_dns)))
     print(red('Geolocation IP Information:'))
@@ -225,12 +222,12 @@ if __name__ == "__main__":
 
     for url, succ, fail, mal in URLS:
         if content_test(url, badip):
-	    if args.success:
+            if args.success:
                 print(green('{0} {1}'.format(badip, succ)))
-            GOOD = GOOD + 1
-        else:
-            print(red('{0} {1}'.format(badip, fail)))
-            BAD = BAD + 1
+                GOOD = GOOD + 1
+            else:
+                print(red('{0} {1}'.format(badip, fail)))
+                BAD = BAD + 1
 
     BAD = BAD
     GOOD = GOOD
